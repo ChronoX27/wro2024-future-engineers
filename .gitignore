@@ -1,7 +1,8 @@
 picar-x/
 picarx/
 vilib/
-robot-hat/
+examples/
+robot_hat/
 
 # Byte-compiled / optimized / DLL files
 **__pycache__**

@@ -1,7 +1,8 @@
 from time import sleep
-from picarx import Picarx
-from vilib import Vilib
-from robot_hat import Music,TTS
+from picarx import Picarxööö  
+# from vilib import Vilib
+from robot_hat import Music, TTS
+
 
 def reset():
     """Resettet alle Motoren."""
@@ -9,35 +10,67 @@ def reset():
     px.set_cam_tilt_angle(0)
     px.set_dir_servo_angle(0)
 
-# def detect_colors(): # Soll Orte und Farben von Hindernissen finden.
-#     print("Hier kommt mal code hin")
+
+POWER = 10  # Geschwindigkeit des Robos beim Fahren.
+LENKUNG = 35  # Einschlag des Lenkmotors
+SAFE = 45  # Sagt dem Robo wie viel Sicherheitsabstand zu Objekten genug ist.
+DANGER = 30  # Sagt dem Robo ab wie viel Abstand er sich sorgen machen muss. (Lenken)
+
+
+def vor():
+    px.forward(POWER)
+    return "vor"
+
+
+def zurück():
+    px.backward(POWER)
+    return "back"
+
+
+def links():
+    return "links"
+
+
+def rechts():
+    return "rechts"
+
 
 def main():
     """Hauptschleife für den Roboter"""
     reset()
 
-    POWER = 5 # Geschwindigkeit des Robos beim Fahren.
-    LENKUNG = 30 # Einschlag des Lenkmotors
-    SAFE = 35 # Sagt dem Robo wie viel Sicherheitsabstand zu Objekten genug ist.
-    DANGER = 20 # Sagt dem Robo ab wie viel Abstand er sich sorgen machen muss. (Lenken)
-
     try:
+        last = ""
         while True:
             distance = round(px.ultrasonic.read())
             # Gerade aus fahren wenn sicht frei ist.
             if distance >= SAFE:
-                px.set_dir_servo_angle(0)
+                # schützt vor endlos schleife
+                if last == "back":
+                    print("zurück > vor Abstand: " + str(distance))
+                    px.set_dir_servo_angle(-LENKUNG)
+                else:
+                    px.set_dir_servo_angle(0)
                 px.forward(POWER)
-            # Wird gefährlich, richtung ändern. (Wand oder Hinderniss zu nah)
+                last = "vor"
+            # Wird gefährlich, Richtung ändern. (Wand oder Hinderniss zu nah)
             elif distance >= DANGER:
                 px.set_dir_servo_angle(-LENKUNG)
                 px.forward(POWER)
-                sleep(.5)
-            # Kein Ausweg mehr, Robo ist zu nah am Hinderniss oder der Wand um zu fahren.
-            else: 
-                px.set_dir_servo_angle(0)
+
+                last = "steuern"
+            # Kein Ausweg mehr, Robo ist zu nah am Hindernis oder der Wand um zu fahren.
+            else:
+                # schützt vor endlos schleife
+                if last == "vor":
+                    print("vor > zurück Abstand: " + str(distance))
+                    px.set_dir_servo_angle(LENKUNG)
+                else:
+                    px.set_dir_servo_angle(0)
                 px.backward(POWER)
-                sleep(.5)
+
+                last = "back"
+            sleep(0.5)
     finally:
         px.forward(0)
         reset()
