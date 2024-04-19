@@ -1,3 +1,7 @@
+picar-x/
+vilib/
+robot-hat/
+
 # Byte-compiled / optimized / DLL files
 **__pycache__**
 *.py[cod]
