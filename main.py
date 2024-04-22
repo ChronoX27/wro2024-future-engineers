@@ -1,87 +1,89 @@
-from time import sleep
+import time
+import threading
 from picarx import Picarx
+from robot_hat import Servo
+from robot_hat.utils import reset_mcu
 
-# from vilib import Vilib
-# from robot_hat import Music, TTS
 
-px = Picarx()
-POWER = 50  # Geschwindigkeit des Robos beim Fahren.
-LENKUNG = 30  # Einschlag des Lenkmotors
-SAFE = 40  # Sagt dem Robo wie viel Sicherheitsabstand zu Objekten genug ist.
-DANGER = 20  # Sagt dem Robo ab wie viel Abstand er sich sorgen machen muss. (Lenken)
+class SensorData:
+    def __init__(self):
+        self.data = None
+        self.lock = threading.Lock()
+        self.new_data_event = threading.Event()
 
-# POWER = 50
-# SafeDistance = 40   # > 40 safe
-# DangerDistance = 20 # > 20 && < 40 turn around,
-#                     # < 20 backward
+    def set_data(self, new_data):
+        # with self.lock:
+        # self.new_data_event.set()
+        self.data = new_data
+
+    def get_data(self):
+        # with self.lock:
+        # self.new_data_event.clear()
+        return self.data
+
+
+def read_ultrasonic(data):
+    while True:
+        new_data = round(px.ultrasonic.read())  # Sensorwert
+        if new_data > 60:
+            new_data = -1
+        data.set_data(new_data)
+        time.sleep(0.1)
 
 
 def reset():
     """Resettet alle Motoren."""
+    print("Set servos to zero")
     px.set_cam_pan_angle(0)
     px.set_cam_tilt_angle(0)
     px.set_dir_servo_angle(0)
+    reset_mcu()
+    for i in range(12):
+        Servo(i).angle(10)
+        time.sleep(0.1)
+        Servo(i).angle(0)
+        time.sleep(0.1)
 
 
-def main():
+def main(data):
     """Hauptschleife für den Roboter"""
     reset()
 
-    # last = ""
-    while True:
-        distance = round(px.ultrasonic.read())
-        # Gerade aus fahren wenn sicht frei ist.
-        if distance >= SAFE:
-            # schützt vor endlos schleife
-            # if last == "back":
-            #     print("zurück > vor Abstand: " + str(distance))
-            #     px.set_dir_servo_angle(-LENKUNG)
-            # else:
-            #     px.set_dir_servo_angle(0)
-            px.set_dir_servo_angle(0)
-            px.forward(POWER)
-        # last = "vor"
-        # Wird gefährlich, Richtung ändern. (Wand oder Hinderniss zu nah)
-        elif distance >= DANGER:
-            print("lenkmanöver")
-            # px.set_dir_servo_angle(LENKUNG)
-            # px.backward(POWER)
-            # px.set_dir_servo_angle(-LENKUNG)
-            # px.forward(POWER)
-            # sleep(0.1)
-            px.set_dir_servo_angle(LENKUNG)
-            px.forward(POWER)
-            sleep(0.1)
+    power = 50  # Geschwindigkeit des Robos beim Fahren.
+    lenkung = 30  # Einschlag des Lenkmotors
+    safe = 40  # Sagt dem Robo wie viel Sicherheitsabstand zu Objekten genug ist.
+    gefahr = 20  # Sagt dem Robo ab wann er lenken soll
 
-            # last = "steuern"
+    while True:
+        us_distance = data.get_data()
+        print(us_distance)
+        # Gerade aus fahren wenn sicht frei ist.
+        if us_distance >= safe:
+            px.set_dir_servo_angle(0)
+            px.forward(power)
+        # Wird gefährlich, Richtung ändern. (Wand oder Hinderniss zu nah)
+        elif us_distance >= gefahr:
+            print("lenkmanöver")
+            px.set_dir_servo_angle(lenkung)
+            px.forward(power)
+            time.sleep(0.1)
         # Kein Ausweg mehr, Robo ist zu nah am Hindernis oder der Wand um zu fahren.
         else:
             print("zurück")
-            # # schützt vor endlos schleife (vielleicht)
-            # if last == "vor":
-            #     print("vor > zurück Abstand: " + str(distance))
-            #     px.set_dir_servo_angle(LENKUNG)
-            # else:
-            #     px.set_dir_servo_angle(0)
-            px.set_dir_servo_angle(-LENKUNG)
-            px.backward(POWER)
-            sleep(0.5)
-            # last = "back"
+            # px.set_dir_servo_angle(-lenkung)
+            px.backward(power)
+            time.sleep(0.5)
 
 
+px = Picarx()
+sensor_data = SensorData()
 
+# if !working:
+#     work()
 
+# Erstelle einen Thread für das Lesen des Sensors
+sensor_thread = threading.Thread(target=read_ultrasonic, args=(sensor_data,))
+sensor_thread.daemon = True  # Stellt sicher, dass der Thread im Hintergrund läuft
+sensor_thread.start()
 
-# tts = TTS()
-# tts.lang("de-DE")
-# music = Music()
-# music.music_set_volume(10)
-
-# Für Aufgabe 1 nicht benötigt
-# Vilib.camera_start(vflip=False,hflip=False)
-# Vilib.display(local=True,web=True)
-
-# px = Picarx()
-
-if __name__ == "__main__":
-    main()
+main(sensor_data)
