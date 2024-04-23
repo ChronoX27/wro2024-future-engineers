@@ -1,11 +1,12 @@
 from time import sleep
 from picarx import Picarx
 
-l_before, m_before, r_before = 0, 0, 0
+l_before, m_before, r_before, us_before = 0, 0, 0, 0
 
 px = Picarx()
 while True:
-    print(f"Ultraschall: \t{px.ultrasonic.read()}")
+    us_now = px.ultrasonic.read()
+    print(f"Ultraschall: \t{us_now} ({us_now - us_before})")
     l_now = px.grayscale.read(0)
     m_now = px.grayscale.read(1)
     r_now = px.grayscale.read(2)
@@ -18,4 +19,5 @@ while True:
     l_before = l_now
     m_before = m_now
     r_before = r_now
+    us_before = us_now
     sleep(1)
