@@ -1,0 +1,32 @@
+[MAIN]
+ignore=
+ignore-paths=examples, picarx, robot_hat, vilib
+fail-under=8.0
+
+
+[MESSAGES CONTROL]
+enable=
+    use-symbolic-message-instead,
+    useless-suppression,
+
+disable=
+    missing-docstring,
+
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines=3
+
+# Ignore comments, docstrings and imports when computing similarities.
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
+
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=80
+
+# Allow the body of an if to be on the same line as the test if there is no
+# else.
+single-line-if-stmt=yes

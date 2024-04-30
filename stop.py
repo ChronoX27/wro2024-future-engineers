@@ -4,12 +4,12 @@ from robot_hat import Servo
 from robot_hat.utils import reset_mcu
 
 
-def reset(px):
+def reset(picar):
     """Resettet alle Motoren."""
     print("Set servos to zero")
-    px.set_cam_pan_angle(0)
-    px.set_cam_tilt_angle(0)
-    px.set_dir_servo_angle(0)
+    picar.set_cam_pan_angle(0)
+    picar.set_cam_tilt_angle(0)
+    picar.set_dir_servo_angle(0)
     reset_mcu()
     for i in range(12):
         Servo(i).angle(15)
