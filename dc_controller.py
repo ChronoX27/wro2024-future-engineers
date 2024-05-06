@@ -1,3 +1,4 @@
+from time import sleep
 from RPi import GPIO
 
 
@@ -19,9 +20,10 @@ class DCController:
         GPIO.output(self.IN2, GPIO.LOW)
 
         self.pwm = GPIO.PWM(self.EN, 100)
-        self.pwm.start(0)
+        self.duty_cyle = 0
+        self.pwm.start(self.duty_cyle)
 
-    def drive(self, speed: int):  # , step: float | int = 1
+    def _drive(self, speed: int):
         """speed (int): -100 to 100
         speed = 0: stops
         speed < 0: drives backwards
@@ -38,21 +40,30 @@ class DCController:
             GPIO.output(self.IN1, GPIO.LOW)
             GPIO.output(self.IN2, GPIO.HIGH)
             speed = min(speed * -1, 100)
-        self.pwm.ChangeDutyCycle(speed)
-        # sleep(step)
+        # self.pwm.ChangeDutyCycle(speed)
+        self._smooth_acceleration(speed)
 
-    def backwards(self, speed: int):
+    def _smooth_acceleration(self, new_speed: int):
+        while self.duty_cyle != new_speed:
+            if new_speed > self.duty_cyle:
+                self.duty_cyle += 1
+            elif new_speed < self.duty_cyle:
+                self.duty_cyle -= 1
+            self.pwm.ChangeDutyCycle(self.duty_cyle)
+            sleep(0.02)
+
+    def forward(self, speed: int):
+        """drives forward
+        speed (int): 0 to 100"""
+        self._drive(speed)
+
+    def backward(self, speed: int):
         """drives backwards
         speed (int): 0 to 100"""
-        speed = max(0, min(speed, 100))
-        GPIO.output(self.IN1, GPIO.HIGH)
-        GPIO.output(self.IN2, GPIO.LOW)
-        self.pwm.ChangeDutyCycle(speed)
+        self._drive(-speed)
 
     def stop(self):
-        GPIO.output(self.IN1, GPIO.LOW)
-        GPIO.output(self.IN2, GPIO.LOW)
-        self.pwm.ChangeDutyCycle(0)
+        self._drive(0)
 
     def gpio_exit(self):
         """cleanup gpio pins"""
