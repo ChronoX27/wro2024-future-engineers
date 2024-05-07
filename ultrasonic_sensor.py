@@ -7,7 +7,7 @@ class UltrasonicSensor:
         self,
         trigger: int,
         echo: int,
-        trigger_time: int | float = 0.1,
+        trigger_time: int | float = 0.05,
         timeout: int | float = 0.03,
     ):
         """pass GPIO pin numbers, not physical pin nubers

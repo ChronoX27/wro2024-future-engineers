@@ -43,14 +43,21 @@ class DCController:
         # self.pwm.ChangeDutyCycle(speed)
         self._smooth_acceleration(speed)
 
-    def _smooth_acceleration(self, new_speed: int):
-        while self.duty_cyle != new_speed:
-            if new_speed > self.duty_cyle:
+    def _smooth_acceleration(self, new_duty_cycle: int):
+        while self.duty_cyle - new_duty_cycle > 10:
+            if new_duty_cycle > self.duty_cyle:
+                self.duty_cyle += 10
+            elif new_duty_cycle < self.duty_cyle:
+                self.duty_cyle -= 10
+            self.pwm.ChangeDutyCycle(self.duty_cyle)
+            sleep(0.08)
+        while self.duty_cyle != new_duty_cycle:
+            if new_duty_cycle > self.duty_cyle:
                 self.duty_cyle += 1
-            elif new_speed < self.duty_cyle:
+            elif new_duty_cycle < self.duty_cyle:
                 self.duty_cyle -= 1
             self.pwm.ChangeDutyCycle(self.duty_cyle)
-            sleep(0.02)
+            sleep(0.015)
 
     def forward(self, speed: int):
         """drives forward
@@ -67,6 +74,7 @@ class DCController:
 
     def gpio_exit(self):
         """cleanup gpio pins"""
+        self.stop()
         self.pwm.stop()
         GPIO.cleanup()
         print("dc cleaned, bye :)")
