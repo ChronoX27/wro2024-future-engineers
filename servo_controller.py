@@ -1,4 +1,3 @@
-from time import sleep
 from RPi import GPIO
 
 
@@ -22,33 +21,27 @@ class ServoController:
         GPIO.setup(self.pin, GPIO.OUT)
         self.pwm = GPIO.PWM(self.pin, 50)
         self.pwm.start(0)
+        self.set_center()
 
-    def set_angle(self, angle: int | float) -> str:
-        if angle < self.min_angle or angle > self.max_angle:
-            new_angle = max(self.min_angle, min(angle, self.max_angle))
-            message = (
-                f"Angle {new_angle}° not in range {self.min_angle}° - {self.max_angle}°"
-            )
-        else:
-            new_angle = angle
-            message = f"Angle set to {angle}°"
+    def set_angle(self, angle: int | float) -> None:
+        new_angle = max(self.min_angle, min(angle, self.max_angle))
         duty = new_angle / 18 + 2
         GPIO.output(self.pin, True)
         self.pwm.ChangeDutyCycle(duty)
-        sleep(1)
         GPIO.output(self.pin, False)
-        return message
+        return
 
-    def set_left(self) -> str:
-        return self.set_angle(self.min_angle)
+    def set_left(self):
+        self.set_angle(self.min_angle)
 
-    def set_right(self) -> str:
-        return self.set_angle(self.max_angle)
+    def set_right(self):
+        self.set_angle(self.max_angle)
 
-    def set_center(self) -> str:
-        return self.set_angle(self.center_angle)
+    def set_center(self):
+        self.set_angle(self.center_angle)
 
     def stop_and_clean(self):
+        self.set_center()
         self.pwm.stop()
         GPIO.cleanup()
         print("servo cleaned :)")
