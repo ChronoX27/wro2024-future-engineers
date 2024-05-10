@@ -72,7 +72,7 @@ class DCController:
     def stop(self):
         self._drive(0)
 
-    def gpio_exit(self):
+    def stop_and_exit(self):
         """cleanup gpio pins"""
         self.stop()
         self.pwm.stop()

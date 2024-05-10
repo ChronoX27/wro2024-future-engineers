@@ -23,13 +23,12 @@ class ServoController:
         self.pwm.start(0)
         self.set_center()
 
-    def set_angle(self, angle: int | float) -> None:
+    def set_angle(self, angle: int | float):
         new_angle = max(self.min_angle, min(angle, self.max_angle))
         duty = new_angle / 18 + 2
         GPIO.output(self.pin, True)
         self.pwm.ChangeDutyCycle(duty)
         GPIO.output(self.pin, False)
-        return
 
     def set_left(self):
         self.set_angle(self.min_angle)
@@ -40,7 +39,7 @@ class ServoController:
     def set_center(self):
         self.set_angle(self.center_angle)
 
-    def stop_and_clean(self):
+    def stop_and_exit(self):
         self.set_center()
         self.pwm.stop()
         GPIO.cleanup()

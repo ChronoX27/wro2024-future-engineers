@@ -113,5 +113,5 @@ try:
                 sleep(0.2)
 
 finally:
-    dc.gpio_exit()
-    servo.stop_and_clean()
+    dc.stop_and_exit()
+    servo.stop_and_exit()

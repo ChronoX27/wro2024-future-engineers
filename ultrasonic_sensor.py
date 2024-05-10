@@ -7,7 +7,7 @@ class UltrasonicSensor:
         self,
         trigger: int,
         echo: int,
-        trigger_time: int | float = 0.05,
+        trigger_time: int | float = 0.02,
         timeout: int | float = 0.03,
     ):
         """pass GPIO pin numbers, not physical pin nubers
@@ -18,6 +18,7 @@ class UltrasonicSensor:
         self.echo = echo
         self.trigger_time = trigger_time
         self.timeout = timeout
+        self.last_distance = -1
         self.setup()
 
     def setup(self):
@@ -25,7 +26,7 @@ class UltrasonicSensor:
         GPIO.setup(self.trigger, GPIO.OUT)
         GPIO.setup(self.echo, GPIO.IN)
 
-    def get_distance(self) -> float:
+    def _measure_once(self) -> float:
         """measures the distance to an obstacle and returns it in cm"""
         GPIO.output(self.trigger, GPIO.HIGH)
         time.sleep(self.trigger_time)
@@ -50,5 +51,21 @@ class UltrasonicSensor:
         time_elapsed = stop_time - start_time
         # multiply with the sonic speed (343.2 m/s = 3432 cm/s)
         # and divide by 2, because there and back
-        distance = round((time_elapsed * 34320) / 2, 2)
+        distance = (time_elapsed * 34320) / 2
         return distance
+
+    def get_distance(self) -> float:
+        """does three mesaurements to increase precison"""
+        d1 = self._measure_once()
+        d2 = self._measure_once()
+        d3 = self._measure_once()
+        d = sorted([d1, d2, d3])
+
+        if d[1] == -1:
+            distance = -1
+        elif d[0] == -1:
+            distance = (d[1] + 0.5 * d[2]) / 1.5
+        else:
+            distance = (0.5 * d[0] + d[1] + 0.5 * d[2]) / 2
+        self.last_distance = round(distance, 2)
+        return round(distance, 2)
